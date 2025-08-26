@@ -212,3 +212,50 @@ every time the state of the wheel changes.  Note that each field corresponds to 
 
 
 ## Interfacing the wheel with ROS
+
+First, created a clean workspace
+
+Then, cloned the (repo)[https://github.com/dbcometto/ros-g29-force-feedback] intro `src`.
+
+Trying `$ colcon build`:
+```bash
+dbcometto@dbcometto-vm:~/workspace/ros2_ws$ colcon build
+Starting >>> ros_g29_force_feedback
+Finished <<< ros_g29_force_feedback [2.51s]                    
+
+Summary: 1 package finished [3.26s]
+```
+
+Oh, it worked this time.  Before, it was crashing:
+```bash
+dbcometto@dbcometto-vm:~/workspace/ros2_ws$ colcon build
+Starting >>> ros_g29_force_feedback
+--- stderr: ros_g29_force_feedback                                
+CMake Deprecation Warning at /home/dbcometto/ros2_humble/install/rosidl_cmake/share/rosidl_cmake/cmake/rosidl_target_interfaces.cmake:32 (message):
+  Use rosidl_get_typesupport_target() and target_link_libraries() instead of
+  rosidl_target_interfaces()
+Call Stack (most recent call first):
+  CMakeLists.txt:36 (rosidl_target_interfaces)
+
+
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_force_feedback.cpp: In member function ‘void G29ForceFeedback::loop()’:
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_force_feedback.cpp:113:12: warning: unused variable ‘last_position’ [-Wunused-variable]
+  113 |     double last_position = m_position;
+      |            ^~~~~~~~~~~~~
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_force_feedback.cpp: In member function ‘void G29ForceFeedback::uploadForce(const double&, const double&, const double&)’:
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_force_feedback.cpp:178:50: warning: unused parameter ‘position’ [-Wunused-parameter]
+  178 | void G29ForceFeedback::uploadForce(const double &position,
+      |                                    ~~~~~~~~~~~~~~^~~~~~~~
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_force_feedback.cpp: In member function ‘void G29ForceFeedback::initDevice()’:
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_force_feedback.cpp:216:19: warning: unused variable ‘key_bits’ [-Wunused-variable]
+  216 |     unsigned char key_bits[1+KEY_MAX/8/sizeof(unsigned char)];
+      |                   ^~~~~~~~
+---
+Finished <<< ros_g29_force_feedback [21.3s]
+
+Summary: 1 package finished [22.0s]
+  1 package had stderr output: ros_g29_force_feedback
+```
+
+Not sure what changed.
+
