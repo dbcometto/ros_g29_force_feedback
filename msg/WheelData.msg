@@ -1,2 +1,4 @@
 std_msgs/Header header
 float32 wheel_position
+float32 accel_position
+float32 brake_position

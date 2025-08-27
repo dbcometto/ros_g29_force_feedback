@@ -21,9 +21,12 @@ private:
 
     // device info
     int m_device_handle;
-    int m_axis_code = ABS_X;
-    int m_axis_min;
-    int m_axis_max;
+    static constexpr int m_axis_code = ABS_X;
+    static constexpr int m_accel_axis = ABS_Z;
+    static constexpr int m_brake_axis = ABS_RZ;
+    int m_axis_min, m_axis_max;
+    int m_accel_min, m_accel_max;
+    int m_brake_min, m_brake_max;
 
     // rosparam
     std::string m_device_name;
@@ -46,6 +49,7 @@ private:
     double m_position;
     double m_torque;
     double m_attack_length;
+    double m_accel_pos, m_brake_pos;
 
 public:
     G29ForceFeedback();
@@ -128,8 +132,20 @@ void G29ForceFeedback::loop() {
     double last_position = m_position;
     // get current state
     while (read(m_device_handle, &event, sizeof(event)) == sizeof(event)) {
-        if (event.type == EV_ABS && event.code == m_axis_code) {
-            m_position = (event.value - (m_axis_max + m_axis_min) * 0.5) * 2 / (m_axis_max - m_axis_min);
+        if (event.type == EV_ABS) {
+            switch (event.code) {
+                case m_axis_code:
+                    m_position = (event.value - (m_axis_max + m_axis_min) * 0.5) * 2 / (m_axis_max - m_axis_min);
+                    break;
+                case m_accel_axis:
+                    m_accel_pos = (event.value - (double) m_accel_min) / (m_accel_max - m_accel_min);
+                    break;
+                case m_brake_axis:
+                    m_brake_pos = (event.value - (double) m_brake_min) / (m_brake_max - m_brake_min);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -151,7 +167,9 @@ void G29ForceFeedback::publish() {
 
     msg.header.stamp = this->get_clock()->now();
     msg.wheel_position = m_position;
-    
+    msg.accel_position = m_accel_pos;
+    msg.brake_position = m_brake_pos;
+
     pub_data->publish(msg);
 }
 
@@ -267,7 +285,7 @@ void G29ForceFeedback::initDevice() {
 
     // get axis value range
     if (ioctl(m_device_handle, EVIOCGABS(m_axis_code), &abs_info) < 0) {
-        std::cout << "ERROR: cannot get axis range" << std::endl;
+        std::cout << "ERROR: cannot get wheel axis range" << std::endl;
         exit(1);
     }
     m_axis_max = abs_info.maximum;
@@ -276,6 +294,23 @@ void G29ForceFeedback::initDevice() {
         std::cout << "ERROR: axis range has bad value" << std::endl;
         exit(1);
     }
+
+
+    // Get accelerator axis info
+    if(ioctl(m_device_handle, EVIOCGABS(m_accel_axis), &abs_info) < 0) {
+        std::cout << "ERROR: cannot get accel xis range" << std::endl;
+        exit(1);
+    }
+    m_accel_min = abs_info.minimum;
+    m_accel_max = abs_info.maximum;
+
+    // Get brake axis info
+    if(ioctl(m_device_handle, EVIOCGABS(m_brake_axis), &abs_info) < 0) {
+        std::cout << "ERROR: cannot get brake axis range" << std::endl;
+        exit(1);
+    }
+    m_brake_min = abs_info.minimum;
+    m_brake_max = abs_info.maximum;
 
     // check force feedback is supported?
     if(!testBit(FF_CONSTANT, ff_bits)) {

@@ -402,3 +402,5 @@ As can be seen, this includes a new config file and a new message file in `/msg`
 std_msgs/Header header
 float32 wheel_position
 ```
+
+Now, updated to also read and publish the pedals.
