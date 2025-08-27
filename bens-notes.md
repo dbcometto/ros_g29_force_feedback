@@ -403,4 +403,4 @@ std_msgs/Header header
 float32 wheel_position
 ```
 
-Now, updated to also read and publish the pedals.
+Now, updated to also read and publish the pedals.  We're publishing on `/wheel_data`.
