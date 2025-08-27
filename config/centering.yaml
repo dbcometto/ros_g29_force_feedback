@@ -6,7 +6,7 @@ g29_force_feedback:
     min_torque: 0.2
     brake_torque: 0.2
     brake_position: 0.1
-    auto_centering_max_torque: 0.3
-    auto_centering_max_position: 0.2
+    auto_centering_max_torque: 0.2
+    auto_centering_max_position: 0.1
     eps: 0.05
-    auto_centering: false
+    auto_centering: true

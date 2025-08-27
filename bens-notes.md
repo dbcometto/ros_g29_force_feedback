@@ -211,7 +211,7 @@ every time the state of the wheel changes.  Note that each field corresponds to 
 
 
 
-## Interfacing the wheel with ROS
+## Interfacing the wheel's force feedback with ROS
 
 First, created a clean workspace
 
@@ -258,4 +258,134 @@ Summary: 1 package finished [22.0s]
 ```
 
 Not sure what changed.
+
+27 Aug 25
+Yes, still builds
+
+First need to update config file:
+
+`ros2_ws/src/ros-g29-force-feedback/config/g29.yaml`
+```yaml
+g29_force_feedback:
+  ros__parameters:
+    device_name: "/dev/input/event6"
+    loop_rate: 0.1
+    max_torque: 1.0
+    min_torque: 0.2
+    brake_torque: 0.2
+    brake_position: 0.1
+    auto_centering_max_torque: 0.3
+    auto_centering_max_position: 0.2
+    eps: 0.05
+    auto_centering: false
+```
+
+
+Okay, new issue on trying to run the node
+
+```bash
+dbcometto@dbcometto-vm:~$ ros2 run ros_g29_force_feedback g29_force_feedback --ros-args --params-file ros2_ws/src/ros_g29_force_feedback/config/g29.yaml 
+[ERROR] [1756306370.302602416] [rcl]: Failed to parse global arguments
+terminate called after throwing an instance of 'rclcpp::exceptions::RCLInvalidROSArgsError'
+  what():  failed to initialize rcl: Couldn't parse params file: '--params-file ros2_ws/src/ros_g29_force_feedback/config/g29.yaml'. Error: Error opening YAML file, at /home/dbcometto/ros2_humble/src/ros2/rcl/rcl_yaml_param_parser/src/parser.c:270, at /home/dbcometto/ros2_humble/src/ros2/rcl/rcl/src/rcl/arguments.c:406
+[ros2run]: Aborted
+```
+
+Alright, path was wrong in example command.  Working command to run the node:
+
+```bash
+dbcometto@dbcometto-vm:~/workspace/ros2_ws/src/ros-g29-force-feedback/config$ ros2 run ros_g29_force_feedback g29_force_feedback --ros-args --params-file /home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/config/g29.yaml 
+device opened
+force feedback supported
+```
+
+This creates the `/g29_force_feedback` node that is subscribed to the `/ff_target` topic.
+
+Per the example usage, publishing a message on the `/ff_target` topic will spin the wheel to the indicated angle:
+
+```bash
+dbcometto@dbcometto-vm:~$ ros2 topic pub /ff_target ros_g29_force_feedback/msg/ForceFeedback "{header: {stamp: {sec: 0, nanosec: 0}, frame_id: ''}, position: 0.3, torque: 0.5}" --once
+publisher: beginning loop
+publishing #1: ros_g29_force_feedback.msg.ForceFeedback(header=std_msgs.msg.Header(stamp=builtin_interfaces.msg.Time(sec=0, nanosec=0), frame_id=''), position=0.3, torque=0.5)
+```
+Note that the position here is "0.3*<max_angle> (g29: max_angle=450° clockwise, -450° counterclockwise)" (per the original `README.md`).  Also, the target position message just needs to be published once and the wheel will go to it.
+
+### Auto centering
+
+Created a new config file: `centering.yaml` with `auto_centering` as `true`.  I also played with the auto centering torque and max position settings (for description see the original `README.md`).  When max position is too close to 0 the wheel starts behaving clunkily.  When it is 0 the wheel spins all the way clockwise... not sure.
+
+`ros2_ws/src/ros-g29-force-feedback/config/centering.yaml`
+```yaml
+g29_force_feedback:
+  ros__parameters:
+    device_name: "/dev/input/event6"
+    loop_rate: 0.1
+    max_torque: 1.0
+    min_torque: 0.2
+    brake_torque: 0.2
+    brake_position: 0.1
+    auto_centering_max_torque: 0.2
+    auto_centering_max_position: 0.1
+    eps: 0.05
+    auto_centering: true
+```
+
+Started the node:
+```bash
+dbcometto@dbcometto-vm:~/workspace/ros2_ws/src/ros-g29-force-feedback/config$ ros2 run ros_g29_force_feedback g29_force_feedback --ros-args --params-file /home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/config/centering.yaml 
+device opened
+force feedback supported
+```
+
+Now once I get outside of the max position distance, there is a slight torque trying to return the wheel to centered.
+
+## Publishing the wheel data
+
+I am not sure if there is another repo for this, but this repo doesn't publish any data.  I suppose there are two options... writing a new thing to read the data from the wheel (ex from `event6`), or updating this existing one to publish it.  I guess it really depends on how the convoy vehicle reads the steering data.
+
+
+Another note, `colcon build` fails on a new file because there are warnings that don't particularly matter.  Running it again fixes it.
+```bash
+dbcometto@dbcometto-vm:~/workspace/ros2_ws$ colcon build
+Starting >>> ros_g29_force_feedback
+--- stderr: ros_g29_force_feedback                                
+CMake Deprecation Warning at /home/dbcometto/ros2_humble/install/rosidl_cmake/share/rosidl_cmake/cmake/rosidl_target_interfaces.cmake:32 (message):
+  Use rosidl_get_typesupport_target() and target_link_libraries() instead of
+  rosidl_target_interfaces()
+Call Stack (most recent call first):
+  CMakeLists.txt:36 (rosidl_target_interfaces)
+
+
+CMake Deprecation Warning at /home/dbcometto/ros2_humble/install/rosidl_cmake/share/rosidl_cmake/cmake/rosidl_target_interfaces.cmake:32 (message):
+  Use rosidl_get_typesupport_target() and target_link_libraries() instead of
+  rosidl_target_interfaces()
+Call Stack (most recent call first):
+  CMakeLists.txt:40 (rosidl_target_interfaces)
+
+
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_feedback_and_publish.cpp: In member function ‘void G29ForceFeedback::loop()’:
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_feedback_and_publish.cpp:113:12: warning: unused variable ‘last_position’ [-Wunused-variable]
+  113 |     double last_position = m_position;
+      |            ^~~~~~~~~~~~~
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_feedback_and_publish.cpp: In member function ‘void G29ForceFeedback::uploadForce(const double&, const double&, const double&)’:
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_feedback_and_publish.cpp:178:50: warning: unused parameter ‘position’ [-Wunused-parameter]
+  178 | void G29ForceFeedback::uploadForce(const double &position,
+      |                                    ~~~~~~~~~~~~~~^~~~~~~~
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_feedback_and_publish.cpp: In member function ‘void G29ForceFeedback::initDevice()’:
+/home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/src/g29_feedback_and_publish.cpp:216:19: warning: unused variable ‘key_bits’ [-Wunused-variable]
+  216 |     unsigned char key_bits[1+KEY_MAX/8/sizeof(unsigned char)];
+      |                   ^~~~~~~~
+---
+Finished <<< ros_g29_force_feedback [18.0s]
+
+Summary: 1 package finished [19.1s]
+  1 package had stderr output: ros_g29_force_feedback
+dbcometto@dbcometto-vm:~/workspace/ros2_ws$ colcon build
+Starting >>> ros_g29_force_feedback
+Finished <<< ros_g29_force_feedback [1.76s]                    
+
+Summary: 1 package finished [2.27s]
+dbcometto@dbcometto-vm:~/workspace/ros2_ws$ 
+```
+
 
