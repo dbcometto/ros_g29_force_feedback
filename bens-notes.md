@@ -388,4 +388,5 @@ Summary: 1 package finished [2.27s]
 dbcometto@dbcometto-vm:~/workspace/ros2_ws$ 
 ```
 
+First thought process: let's create two separate packages, one to control the feedback and one to publish the data.  However, the wheel cannot be accessed by two separate processes, so we will need to modify the original feedback process to publish the data.
 

@@ -28,6 +28,7 @@ set(dependencies
 # Generate project targer with msg
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ForceFeedback.msg"
+  "msg/WheelData.msg"
   DEPENDENCIES rosidl_default_generators std_msgs)
 
 # Add executable
@@ -35,10 +36,15 @@ add_executable(g29_force_feedback src/g29_force_feedback.cpp)
 ament_target_dependencies(g29_force_feedback ${dependencies})
 rosidl_target_interfaces(g29_force_feedback ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
+add_executable(g29_feedback_publisher src/g29_feedback_publisher.cpp)
+ament_target_dependencies(g29_feedback_publisher ${dependencies})
+rosidl_target_interfaces(g29_feedback_publisher ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
 ament_export_dependencies(rosidl_default_runtime)
 
 install(TARGETS
   g29_force_feedback
+  g29_feedback_publisher
   DESTINATION lib/${PROJECT_NAME}
 )
 
