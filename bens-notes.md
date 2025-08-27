@@ -390,3 +390,15 @@ dbcometto@dbcometto-vm:~/workspace/ros2_ws$
 
 First thought process: let's create two separate packages, one to control the feedback and one to publish the data.  However, the wheel cannot be accessed by two separate processes, so we will need to modify the original feedback process to publish the data.
 
+So, now wrote a new file `g29_feedback_publisher` based on `g29_force_feedback`.  It can be ran with:
+
+```bash
+ros2 run ros_g29_force_feedback g29_feedback_publisher --ros-args --params-file /home/dbcometto/workspace/ros2_ws/src/ros-g29-force-feedback/config/publishing.yaml 
+```
+
+As can be seen, this includes a new config file and a new message file in `/msg` which has
+
+```plaintext
+std_msgs/Header header
+float32 wheel_position
+```
