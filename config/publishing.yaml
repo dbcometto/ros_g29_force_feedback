@@ -1,6 +1,6 @@
 g29_force_feedback:
   ros__parameters:
-    device_name: "/dev/input/event6"
+    device_name: "/dev/input/event19"
     loop_period: 0.1
     pub_period: 0.25
     max_torque: 1.0
