@@ -1,4 +1,4 @@
-g29_force_feedback:
+g29_feedback_publisher:
   ros__parameters:
     device_name: "/dev/input/event19"
     loop_period: 0.1
