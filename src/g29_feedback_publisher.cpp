@@ -49,7 +49,8 @@ private:
     double m_position;
     double m_torque;
     double m_attack_length;
-    double m_accel_pos, m_brake_pos;
+    double m_accel_pos = 1.0;
+    double m_brake_pos = 1.0;
 
 public:
     G29ForceFeedback();
