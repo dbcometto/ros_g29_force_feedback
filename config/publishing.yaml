@@ -9,5 +9,5 @@ g29_feedback_publisher:
     brake_position: 0.1
     auto_centering_max_torque: 0.2
     auto_centering_max_position: 0.1
-    eps: 0.05
+    eps: 0.1
     auto_centering: true
