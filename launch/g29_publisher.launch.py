@@ -13,19 +13,37 @@ def generate_launch_description():
         get_package_share_directory('ros_g29_force_feedback'),
         "config",
         params_file)
+    
+    ld = LaunchDescription()
+
+
+    #=============== Launch Arguments ===============#
+
+    # Ben: Steering wheel port
+    steering_wheel_port = LaunchConfiguration("steering_wheel_port")
+    steering_wheel_port_la = DeclareLaunchArgument(
+        "steering_wheel_port", default_value="/dev/input/event19"
+    )
+    ld.add_action(steering_wheel_port_la)
+
+
+    #=============== Nodes ===============#
+
         
     g29_ff = Node(
             package="ros_g29_force_feedback",
             executable="g29_feedback_publisher",
             name="g29_feedback_publisher",
             output="screen",
-            parameters=[params])
+            parameters=[params,{"device_name":steering_wheel_port}])
     
     delayed_node = TimerAction(
         period=3.0,
         actions=[g29_ff]
     )
+    ld.add_action(delayed_node)
 
-    return LaunchDescription([
-        delayed_node
-    ])
+
+    
+
+    return ld
