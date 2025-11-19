@@ -8,7 +8,7 @@ from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
     
-    params_file = "publishing.yaml"
+    params_file = "convoy_steering.yaml"
     params = os.path.join(
         get_package_share_directory('ros_g29_force_feedback'),
         "config",
@@ -22,7 +22,7 @@ def generate_launch_description():
     # Ben: Steering wheel port
     steering_wheel_port = LaunchConfiguration("steering_wheel_port")
     steering_wheel_port_la = DeclareLaunchArgument(
-        "steering_wheel_port", default_value="/dev/input/event19"
+        "steering_wheel_port", default_value="/dev/input/event7"
     )
     ld.add_action(steering_wheel_port_la)
 

@@ -150,9 +150,12 @@ void G29ForceFeedback::loop() {
         }
     }
 
+    
+
     if (m_is_brake_range || m_auto_centering) {
         calcCenteringForce(m_torque, m_target, m_position);
         m_attack_length = 0.0;
+        RCLCPP_INFO(this->get_logger(), "Loop!");
 
     } else {
         calcRotateForce(m_torque, m_attack_length, m_target, m_position);
