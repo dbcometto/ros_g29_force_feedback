@@ -155,7 +155,7 @@ void G29ForceFeedback::loop() {
     if (m_is_brake_range || m_auto_centering) {
         calcCenteringForce(m_torque, m_target, m_position);
         m_attack_length = 0.0;
-        RCLCPP_INFO(this->get_logger(), "Loop!");
+        // RCLCPP_INFO(this->get_logger(), "Loop!");
 
     } else {
         calcRotateForce(m_torque, m_attack_length, m_target, m_position);
@@ -213,10 +213,22 @@ void G29ForceFeedback::calcCenteringForce(double &torque,
         torque = 0.0;
 
     else {
-        double torque_range = m_auto_centering_max_torque - m_min_torque;
-        double power = (fabs(diff) - m_eps) / (m_auto_centering_max_position - m_eps);
-        double buf_torque = power * torque_range + m_min_torque;
-        torque = std::min(buf_torque, m_auto_centering_max_torque) * direction;
+        // // Original "Wall" TOque
+        // double torque_range = m_auto_centering_max_torque - m_min_torque;
+        // double power = (fabs(diff) - m_eps) / (m_auto_centering_max_position - m_eps);
+        // double buf_torque = power * torque_range + m_min_torque;
+        // torque = std::min(buf_torque, m_auto_centering_max_torque) * direction;
+
+        // spring-like proportional torque
+        torque = std::clamp(m_max_torque * diff, -m_max_torque, m_max_torque);
+
+        // optional damping
+        static double prev_position = 0.0;
+        double velocity = (current_position - prev_position) / m_loop_period;
+        prev_position = current_position;
+
+        double damping = 0.05 * velocity;   // adjust for RC-car feel
+        torque -= damping;
     }
 }
 
